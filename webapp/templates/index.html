@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Waste Classification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EDEBE3;
+    --panel: #F7F6F1;
+    --ink: #1C201D;
+    --ink-soft: #5B5F56;
+    --line: #D3D0C4;
+    --accent: #1F4B3F;
+    --accent-hover: #163931;
+    --accent-soft: #DCE6E1;
+    --error: #A3402F;
+
+    --c-cardboard: #A9713A;
+    --c-glass:     #2F6F4F;
+    --c-metal:     #6B7280;
+    --c-paper:     #2F5FA8;
+    --c-plastic:   #C1592B;
+    --c-trash:     #6B5B73;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, .display {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+  }
+
+  a { color: inherit; }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+
+  header.top {
+    padding: 32px 0 8px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 8px;
+  }
+  .wordmark {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    padding-bottom: 20px;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    align-items: start;
+    padding: 56px 0 40px;
+  }
+
+  .hero h1 {
+    font-size: 44px;
+    line-height: 1.08;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0 0 18px;
+    max-width: 12ch;
+  }
+
+  .hero p.lede {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin: 0 0 32px;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    padding: 10px 0 0;
+  }
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* --- Upload panel --- */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 28px;
+  }
+
+  .dropzone {
+    border: 1.5px dashed var(--line);
+    border-radius: 4px;
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    position: relative;
+  }
+  .dropzone.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .dropzone .icon {
+    width: 34px;
+    height: 34px;
+    margin: 0 auto 14px;
+    color: var(--ink-soft);
+  }
+  .dropzone .primary-text {
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0 0 4px;
+  }
+  .dropzone .secondary-text {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .preview-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .preview-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 1px solid var(--line);
+    display: none;
+  }
+  .preview-name {
+    font-size: 13px;
+    color: var(--ink-soft);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  button.classify {
+    width: 100%;
+    margin-top: 20px;
+    padding: 13px 18px;
+    background: var(--accent);
+    color: #F7F6F1;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button.classify:hover:not(:disabled) { background: var(--accent-hover); }
+  button.classify:disabled {
+    background: var(--line);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
+
+  .result {
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    display: none;
+  }
+  .result.visible { display: block; }
+
+  .result-headline {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .result-class {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 28px;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+  .result-confidence {
+    font-size: 14px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  .prob-list {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .prob-row {
+    display: grid;
+    grid-template-columns: 84px 1fr 44px;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .prob-label {
+    text-transform: capitalize;
+    color: var(--ink-soft);
+  }
+  .prob-track {
+    height: 7px;
+    background: var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .prob-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+  .prob-value {
+    text-align: right;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .error-box {
+    display: none;
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: #F3E7E3;
+    border: 1px solid var(--error);
+    border-radius: 4px;
+    color: var(--error);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .error-box.visible { display: block; }
+
+  footer {
+    padding: 40px 0 56px;
+    border-top: 1px solid var(--line);
+    margin-top: 20px;
+  }
+  footer p {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: 1fr; gap: 36px; padding: 36px 0 28px; }
+    .hero h1 { font-size: 32px; max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="wordmark">Smart Waste Classification</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1>Point a photo. Find its stream.</h1>
+      <p class="lede">
+        A convolutional network trained from scratch — no pretrained weights —
+        sorts a waste photo into one of six recycling streams and tells you
+        how sure it is.
+      </p>
+      <div class="legend">
+        <div class="legend-item"><span class="dot" style="background:var(--c-cardboard)"></span>Cardboard</div>
+        <div class="legend-item"><span class="dot" style="background:var(--c-glass)"></span>Glass</div>
+        <div class="legend-item"><span class="dot" style="background:var(--c-metal)"></span>Metal</div>
+        <div class="legend-item"><span class="dot" style="background:var(--c-paper)"></span>Paper</div>
+        <div class="legend-item"><span class="dot" style="background:var(--c-plastic)"></span>Plastic</div>
+        <div class="legend-item"><span class="dot" style="background:var(--c-trash)"></span>Trash</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <form id="predict-form">
+        <div class="dropzone" id="dropzone">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 16.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7.5 9 12 4.5 16.5 9" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 4.5V15" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p class="primary-text">Drop an image, or click to browse</p>
+          <p class="secondary-text">JPG or PNG</p>
+          <input type="file" id="file-input" accept="image/*">
+        </div>
+
+        <div class="preview-row" id="preview-row" style="display:none;">
+          <img class="preview-thumb" id="preview-thumb" alt="Selected image preview">
+          <span class="preview-name" id="preview-name"></span>
+        </div>
+
+        <button type="submit" class="classify" id="classify-btn" disabled>Classify image</button>
+      </form>
+
+      <div class="error-box" id="error-box"></div>
+
+      <div class="result" id="result">
+        <div class="result-headline">
+          <div class="result-class" id="result-class">—</div>
+          <div class="result-confidence" id="result-confidence"></div>
+        </div>
+        <div class="prob-list" id="prob-list"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      Trained on TrashNet, a set of studio-lit, plain-background photos.
+      Plain, matte objects are classified reliably; glossy, printed, or
+      unusually shaped items are harder for this model and may come back
+      with lower confidence.
+    </p>
+  </div>
+</footer>
+
+<script>
+  const CATEGORY_COLORS = {
+    cardboard: 'var(--c-cardboard)',
+    glass:     'var(--c-glass)',
+    metal:     'var(--c-metal)',
+    paper:     'var(--c-paper)',
+    plastic:   'var(--c-plastic)',
+    trash:     'var(--c-trash)',
+  };
+
+  const dropzone     = document.getElementById('dropzone');
+  const fileInput    = document.getElementById('file-input');
+  const previewRow   = document.getElementById('preview-row');
+  const previewThumb = document.getElementById('preview-thumb');
+  const previewName  = document.getElementById('preview-name');
+  const classifyBtn  = document.getElementById('classify-btn');
+  const form         = document.getElementById('predict-form');
+  const resultBox    = document.getElementById('result');
+  const resultClass  = document.getElementById('result-class');
+  const resultConf   = document.getElementById('result-confidence');
+  const probList     = document.getElementById('prob-list');
+  const errorBox     = document.getElementById('error-box');
+
+  let selectedFile = null;
+
+  function setFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewThumb.src = e.target.result;
+      previewThumb.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    previewName.textContent = file.name;
+    previewRow.style.display = 'flex';
+    classifyBtn.disabled = false;
+    resultBox.classList.remove('visible');
+    errorBox.classList.remove('visible');
+  }
+
+  fileInput.addEventListener('change', (e) => setFile(e.target.files[0]));
+
+  ['dragenter', 'dragover'].forEach(evt =>
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropzone.classList.add('drag-over');
+    })
+  );
+  ['dragleave', 'drop'].forEach(evt =>
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+    })
+  );
+  dropzone.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files[0];
+    setFile(file);
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!selectedFile) return;
+
+    classifyBtn.disabled = true;
+    classifyBtn.textContent = 'Classifying…';
+    errorBox.classList.remove('visible');
+
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+
+    try {
+      const res = await fetch('/predict', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong.');
+      }
+
+      resultClass.textContent = data.predicted_class;
+      resultClass.style.color = CATEGORY_COLORS[data.predicted_class] || 'var(--ink)';
+      resultConf.textContent = data.confidence.toFixed(1) + '% confidence';
+
+      probList.innerHTML = '';
+      data.all_probabilities.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'prob-row';
+        const color = CATEGORY_COLORS[item.class] || 'var(--ink-soft)';
+        row.innerHTML = `
+          <span class="prob-label">${item.class}</span>
+          <span class="prob-track"><span class="prob-fill" style="width:${item.probability}%; background:${color};"></span></span>
+          <span class="prob-value">${item.probability.toFixed(1)}%</span>
+        `;
+        probList.appendChild(row);
+      });
+
+      resultBox.classList.add('visible');
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.classList.add('visible');
+      resultBox.classList.remove('visible');
+    } finally {
+      classifyBtn.disabled = false;
+      classifyBtn.textContent = 'Classify image';
+    }
+  });
+</script>
+
+</body>
+</html>

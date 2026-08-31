@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+dataset/*/
+!dataset/.gitkeep
+models/*.pth
+outputs/graphs/*.png
+outputs/confusion_matrix/*.png
+outputs/predictions/*.png
