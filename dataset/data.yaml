@@ -1,0 +1,9 @@
+# YOLO dataset config
+# path is relative to this file's location (or use absolute paths)
+path:
+train: images/train
+val: images/val
+
+# Number of classes and their names, IN class_id ORDER (0, 1, 2, ...)
+nc: 2
+names: ['cat', 'dog']   # <-- replace with your own 2-3 chosen classes

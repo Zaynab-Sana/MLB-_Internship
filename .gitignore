@@ -1,0 +1,17 @@
+# Virtual environment - never push this, it's huge (hundreds of MB) and machine-specific
+venv/
+env/
+
+# Python cache files - auto-generated, no reason to track them
+__pycache__/
+*.pyc
+
+# PyCharm project settings - personal to your editor, not part of the actual project
+.idea/
+
+# OS junk files
+.DS_Store
+Thumbs.db
+
+# ngrok logs if any get created locally
+ngrok.log
